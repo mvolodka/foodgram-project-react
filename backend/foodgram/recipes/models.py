@@ -1,9 +1,8 @@
 from colorfield.fields import ColorField
+from django.conf import settings
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-
-from ..users.models import User
 
 
 class Tag(models.Model):
@@ -70,7 +69,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     """Модель для рецептов."""
     author = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         verbose_name='Автор рецепта',
         on_delete=models.CASCADE,
         related_name='recipes',
@@ -162,7 +161,7 @@ class IngredientRecipe(models.Model):
 class ShoppingCartFavorites(models.Model):
     """Общая модель для списка покупок и избранного."""
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         verbose_name='Пользователь',
         on_delete=models.CASCADE,
 
