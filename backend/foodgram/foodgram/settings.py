@@ -18,8 +18,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'users',
-    'recipes',
+    'rest_framework',
+    "rest_framework.authtoken",
+    "django_filters",
+    "djoser",
+    "colorfield",
+
+    'users.apps.UsersConfig',
+    'recipes.apps.RecipesConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
