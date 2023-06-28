@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
@@ -7,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 
 from recipes.models import (Ingredient, Tag, Recipe, IngredientRecipe, Favorite, ShoppingCart)
+from users.models import User
 
 
 class CustomUserSerializer(UserSerializer):
@@ -14,7 +14,7 @@ class CustomUserSerializer(UserSerializer):
     is_subscribed = SerializerMethodField(read_only=True)
 
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
         fields = [
             'id',
             'email',
@@ -35,7 +35,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для создания пользователя."""
 
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
         fields = [
             'email',
             'username',
@@ -65,7 +65,7 @@ class SubscribeListSerializer(CustomUserSerializer):
     def validate(self, data):
         author_id = self.context.get(
             'request').parser_context.get('kwargs').get('id')
-        author = get_object_or_404(settings.AUTH_USER_MODEL, id=author_id)
+        author = get_object_or_404(User, id=author_id)
         user = self.context.get('request').user
         if user.follower.filter(author=author_id).exists():
             raise ValidationError(
