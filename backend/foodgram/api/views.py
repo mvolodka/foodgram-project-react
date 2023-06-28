@@ -10,6 +10,9 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
+from users.models import Follow
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnlyPermission
@@ -17,9 +20,6 @@ from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadSerializer,
                           ShoppingCartSerializer, SubscribeListSerializer,
                           TagSerializer, CustomUserSerializer)
-from ..recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                              ShoppingCart, Tag)
-from ..users.models import Follow
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
