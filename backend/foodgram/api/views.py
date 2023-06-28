@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.db.models import Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -13,6 +12,7 @@ from rest_framework.response import Response
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from users.models import Follow
+from users.models import User
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnlyPermission
@@ -127,7 +127,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class CustomUserViewSet(UserViewSet):
     """Вьюсет для работы с пользователями."""
-    queryset = settings.AUTH_USER_MODEL.objects.all()
+    queryset = User.objects.all()
     serializer_class = CustomUserSerializer
     pagination_class = CustomPagination
 
@@ -138,7 +138,7 @@ class CustomUserViewSet(UserViewSet):
     )
     def subscribe(self, request, pk=id):
         user = request.user
-        author = get_object_or_404(settings.AUTH_USER_MODEL, pk=pk)
+        author = get_object_or_404(User, pk=pk)
 
         if request.method == 'POST':
             serializer = SubscribeListSerializer(
@@ -157,7 +157,7 @@ class CustomUserViewSet(UserViewSet):
     @action(detail=False, permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
         user = request.user
-        queryset = settings.AUTH_USER_MODEL.objects.filter(following__user=user)
+        queryset = User.objects.filter(following__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeListSerializer(
             pages, many=True, context={'request': request}
