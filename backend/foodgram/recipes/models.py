@@ -120,7 +120,7 @@ class Recipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    """Модель для ингридиентов."""
+    """Модель для связи ингридиентов и рецепта."""
     ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='Ингридиент',
