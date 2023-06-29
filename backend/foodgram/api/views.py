@@ -85,7 +85,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'user': request.user.id,
             'recipe': recipe.id
         }
-        serializer = ShoppingCartSerializer(data=data, context={'request': request})
+        serializer = ShoppingCartSerializer(
+            data=data,
+            context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -110,7 +113,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'user': request.user.id,
             'recipe': recipe.id
         }
-        serializer = FavoriteSerializer(data=data, context={"request": request})
+        serializer = FavoriteSerializer(
+            data=data,
+            context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)

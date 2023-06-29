@@ -5,7 +5,10 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 
-from recipes.models import (Ingredient, Tag, Recipe, IngredientRecipe, Favorite, ShoppingCart)
+from recipes.models import (
+    Ingredient, Tag, Recipe, IngredientRecipe,
+    Favorite, ShoppingCart
+)
 from users.models import User
 
 
@@ -59,7 +62,8 @@ class SubscribeListSerializer(CustomUserSerializer):
     recipes = SerializerMethodField()
 
     class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + ['recipes_count', 'recipes']
+        fields = CustomUserSerializer.Meta.fields + \
+            ['recipes_count', 'recipes']
         read_only_fields = ['email', 'username', 'first_name', 'last_name']
 
     def validate(self, data):
