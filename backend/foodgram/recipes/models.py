@@ -1,6 +1,6 @@
 from colorfield.fields import ColorField
 from django.conf import settings
-from django.core.validators import (MaxValueValidator, MinValueValidator,
+from django.core.validators import (MinValueValidator,
                                     RegexValidator)
 from django.db import models
 
@@ -104,12 +104,6 @@ class Recipe(models.Model):
                     'Время приготовления не '
                     'может быть меньше 1 минуты!')
             ),
-            MaxValueValidator(
-                180,
-                message=(
-                    'Время приготовления не '
-                    'может быть больше 3 часов!')
-            )
         ],
     )
     pub_date = models.DateTimeField(

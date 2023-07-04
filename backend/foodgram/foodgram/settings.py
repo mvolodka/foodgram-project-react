@@ -1,12 +1,17 @@
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-f*zdl99cw2-gyp*j619ouew49wbj_m91a$m)yx^*mzpuuc45*y'
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'foodgramyap.ddns.net').split(', ')
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -19,10 +24,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    "rest_framework.authtoken",
-    "django_filters",
-    "djoser",
-    "colorfield",
+    'rest_framework.authtoken',
+    'django_filters',
+    'djoser',
+    'colorfield',
 
     'users.apps.UsersConfig',
     'recipes.apps.RecipesConfig',
@@ -82,27 +87,27 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
     ],
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
 DJOSER = {
-    "SERIALIZERS": {
-        "user_create": "api.serializers.UserCreateSerializer",
-        "user": "api.serializers.UserSerializer",
-        "current_user": "api.serializers.UserSerializer",
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.UserCreateSerializer',
+        'user': 'api.serializers.UserSerializer',
+        'current_user': 'api.serializers.UserSerializer',
     },
 
-    "PERMISSIONS": {
-        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
-        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
 
-    "HIDE_USERS": False,
+    'HIDE_USERS': False,
 }
 
 LANGUAGE_CODE = 'ru-RU'
