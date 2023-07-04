@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from djoser.serializers import UserCreateSerializer as DjoserUserCreateSerializer
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
@@ -10,9 +12,44 @@ from recipes.models import (
     Ingredient, Tag, Recipe, IngredientRecipe,
     Favorite, ShoppingCart
 )
-from users.serializers import UserSerializer
 
 User = get_user_model()
+
+
+class UserSerializer(DjoserUserSerializer):
+    """Сериализатор модели пользователя."""
+    is_subscribed = SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+        ]
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+        return obj.following.filter(user=request.user).exists()
+
+
+class UserCreateSerializer(DjoserUserCreateSerializer):
+    """Сериализатор для создания пользователя."""
+
+    class Meta:
+        model = User
+        fields = [
+            'email',
+            'username',
+            'first_name',
+            'last_name',
+            'password'
+        ]
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
