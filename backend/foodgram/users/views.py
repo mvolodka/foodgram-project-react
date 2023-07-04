@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import status
@@ -9,11 +10,13 @@ from api.pagination import CustomPagination
 from api.serializers import (SubscribeListSerializer,
                              UserSerializer)
 from users.models import Follow
-from users.models import User
+
+User = get_user_model()
 
 
 class UserViewSet(UserViewSet):
     """Вьюсет для работы с пользователями."""
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = CustomPagination
 
