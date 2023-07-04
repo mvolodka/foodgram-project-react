@@ -2,7 +2,6 @@ from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -12,15 +11,12 @@ from rest_framework.response import Response
 from api.utils import get_shopping_cart
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
-from users.models import Follow
-from users.models import User
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorOrReadOnlyPermission
 from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadSerializer,
-                          ShoppingCartSerializer, SubscribeListSerializer,
-                          TagSerializer, UserSerializer)
+                          ShoppingCartSerializer, TagSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
