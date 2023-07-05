@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Prefetch
 from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.shortcuts import get_object_or_404
@@ -26,33 +27,55 @@ User = get_user_model()
 
 
 class UserViewSet(DjoserUserViewSet):
-    """Вьюсет для работы с пользователями. Для авторизованных
-    пользователей возможность подписаться/отписаться."""
+    """
+    Вьюсет для работы с пользователями. Для авторизованных
+    пользователей возможность подписаться/отписаться.
+    """
     serializer_class = UserSerializer
     pagination_class = CustomPagination
 
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return User.objects.annotate(
+                is_subscribed=Exists(
+                    self.request.user.follower.filter(
+                        author=OuterRef('id'))
+                )).prefetch_related(
+                'follower', 'following')
+        return User.objects.annotate(
+            is_subscribed=Value(False))
+
     @action(
         detail=True,
-        methods=['post', 'delete'],
+        methods=['post'],
         permission_classes=[IsAuthenticated],
     )
     def subscribe(self, request, pk=id):
         user = request.user
         author = get_object_or_404(User, pk=pk)
+        if user == author:
+            return Response({
+                'errors': 'Вы не можете подписываться на самого себя!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if Follow.objects.filter(user=user, author=author).exists():
+            return Response({
+                'errors': 'Вы уже подписаны на данного пользователя!'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        serializer = SubscribeListSerializer(
+            author, data=request.data, context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        Follow.objects.create(user=user, author=author)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'POST':
-            serializer = SubscribeListSerializer(
-                author, data=request.data, context={'request': request}
-            )
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            get_object_or_404(
-                Follow, user=user, author=author
-            ).delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+    @subscribe.mapping.delete
+    def delete_subscription(self, request, pk=id):
+        user = request.user
+        author = get_object_or_404(User, pk=pk)
+        get_object_or_404(
+            Follow, user=user, author=author
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
     def subscriptions(self, request):
@@ -96,23 +119,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return CreateRecipeSerializer
 
     def get_queryset(self):
+        prefetch = Prefetch('author', 'tags', 'ingredients')
+        if self.request.user.is_authenticated:
+            return Recipe.objects.annotate(
+                is_favorited=Exists(
+                    Favorite.objects.filter(
+                        user=self.request.user, recipe=OuterRef('id'))),
+                is_in_shopping_cart=Exists(
+                    ShoppingCart.objects.filter(
+                        user=self.request.user,
+                        recipe=OuterRef('id')))
+            ).prefetch_related(prefetch)
         return Recipe.objects.annotate(
-            is_favorited=Exists(
-                Favorite.objects.filter(
-                    user=self.request.user, recipe=OuterRef('id'))),
-            is_in_shopping_cart=Exists(
-                ShoppingCart.objects.filter(
-                    user=self.request.user,
-                    recipe=OuterRef('id')))
-        ).select_related('author').prefetch_related(
-            'tags', 'ingredients', 'recipe',
-            'shopping_cart', 'favorite_recipe'
-        ) if self.request.user.is_authenticated else Recipe.objects.annotate(
             is_in_shopping_cart=Value(False),
             is_favorited=Value(False),
-        ).select_related('author').prefetch_related(
-            'tags', 'ingredients', 'recipe',
-            'shopping_cart', 'favorite_recipe')
+        ).prefetch_related(prefetch)
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
@@ -121,7 +142,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).order_by('ingredient__name').values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
-        return get_shopping_cart(ingredients)
+        file = 'shopping_list.txt'
+        response = get_shopping_cart(ingredients)
+        response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
+        return response
 
     @action(
         detail=True,

@@ -8,7 +8,4 @@ def get_shopping_cart(ingredients):
             f"\n{ingredient['ingredient__name']} "
             f"({ingredient['ingredient__measurement_unit']}) - "
             f"{ingredient['amount']}")
-    file = 'shopping_list.txt'
-    response = FileResponse(shopping_list, content_type='text/plain')
-    response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
-    return response
+    return FileResponse(shopping_list, content_type='text/plain')
