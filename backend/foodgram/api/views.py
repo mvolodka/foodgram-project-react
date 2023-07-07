@@ -139,7 +139,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             qs = qs.annotate(
                 is_favorited=Exists(is_favorited),
                 is_in_shopping_cart=Exists(is_in_shopping_cart))
-        return qs
+            return qs
+        return qs.annotate(
+            is_in_shopping_cart=Value(False),
+            is_favorited=Value(False))
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
