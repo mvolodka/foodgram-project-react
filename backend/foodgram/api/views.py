@@ -128,9 +128,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Recipe
             .objects
             .select_related('author')
-            .prefetch_related('tags', 'ingredients',
-                              'recipe', 'shopping_cart',
-                              'favorite_recipe'))
+            .prefetch_related('tags', 'ingredients'))
         if self.request.user.is_authenticated:
             is_favorited = (
                 Favorite
