@@ -46,9 +46,9 @@ class UserViewSet(DjoserUserViewSet):
                         .filter(author=OuterRef('id'))))
                 .prefetch_related('follower', 'following'))
         return (
-                User
-                .objects
-                .annotate(is_subscribed=Value(False)))
+            User
+            .objects
+            .annotate(is_subscribed=Value(False)))
 
     @action(
         detail=True,
@@ -124,27 +124,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return CreateRecipeSerializer
 
     def get_queryset(self):
+        qs = (
+            Recipe
+            .objects
+            .select_related('author')
+            .prefetch_related('tags', 'ingredients',
+                              'recipe', 'shopping_cart',
+                              'favorite_recipe'))
         if self.request.user.is_authenticated:
-            return get_select_prefetch_related(
-                Recipe.objects.annotate(
-                    is_favorited=Exists(
-                        Favorite
-                        .objects
-                        .filter(
-                            user=self.request.user,
-                            recipe=OuterRef('id'))),
-                    is_in_shopping_cart=Exists(
-                        ShoppingCart
-                        .objects
-                        .filter(
-                            user=self.request.user,
-                            recipe=OuterRef('id')))
-                ))
-        return get_select_prefetch_related(
-            Recipe.objects.annotate(
-                is_in_shopping_cart=Value(False),
-                is_favorited=Value(False),
-            ))
+            is_favorited = (
+                Favorite
+                .objects
+                .filter(
+                    user=self.request.user,
+                    recipe=OuterRef('id'))),
+            is_in_shopping_cart = (
+                ShoppingCart
+                .objects
+                .filter(
+                    user=self.request.user,
+                    recipe=OuterRef('id')))
+            qs = qs.annotate(
+                is_favorited=Exists(is_favorited),
+                is_in_shopping_cart=Exists(is_in_shopping_cart))
+        return qs
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
