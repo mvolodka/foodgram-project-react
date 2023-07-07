@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch
 from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef, Value
+from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
@@ -11,7 +11,7 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 
-from api.utils import get_shopping_cart
+from api.utils import get_shopping_cart, get_select_prefetch_related
 from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
                             ShoppingCart, Tag)
 from users.models import Follow
@@ -35,15 +35,20 @@ class UserViewSet(DjoserUserViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
+
         if self.request.user.is_authenticated:
-            return User.objects.annotate(
-                is_subscribed=Exists(
-                    self.request.user.follower.filter(
-                        author=OuterRef('id'))
-                )).prefetch_related(
-                'follower', 'following')
-        return User.objects.annotate(
-            is_subscribed=Value(False))
+            return (
+                User
+                .objects
+                .annotate(
+                    is_subscribed=Exists(
+                        self.request.user.follower
+                        .filter(author=OuterRef('id'))))
+                .prefetch_related('follower', 'following'))
+        return (
+                User
+                .objects
+                .annotate(is_subscribed=Value(False)))
 
     @action(
         detail=True,
@@ -70,11 +75,11 @@ class UserViewSet(DjoserUserViewSet):
 
     @subscribe.mapping.delete
     def delete_subscription(self, request, pk=id):
-        user = request.user
-        author = get_object_or_404(User, pk=pk)
-        get_object_or_404(
-            Follow, user=user, author=author
-        ).delete()
+        subscription = get_object_or_404(Follow,
+                                         user=request.user,
+                                         author=get_object_or_404(
+                                             User, pk=pk))
+        subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, permission_classes=[IsAuthenticated])
@@ -119,21 +124,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return CreateRecipeSerializer
 
     def get_queryset(self):
-        prefetch = Prefetch('author', 'tags', 'ingredients')
         if self.request.user.is_authenticated:
-            return Recipe.objects.annotate(
-                is_favorited=Exists(
-                    Favorite.objects.filter(
-                        user=self.request.user, recipe=OuterRef('id'))),
-                is_in_shopping_cart=Exists(
-                    ShoppingCart.objects.filter(
-                        user=self.request.user,
-                        recipe=OuterRef('id')))
-            ).prefetch_related(prefetch)
-        return Recipe.objects.annotate(
-            is_in_shopping_cart=Value(False),
-            is_favorited=Value(False),
-        ).prefetch_related(prefetch)
+            return get_select_prefetch_related(
+                Recipe.objects.annotate(
+                    is_favorited=Exists(
+                        Favorite
+                        .objects
+                        .filter(
+                            user=self.request.user,
+                            recipe=OuterRef('id'))),
+                    is_in_shopping_cart=Exists(
+                        ShoppingCart
+                        .objects
+                        .filter(
+                            user=self.request.user,
+                            recipe=OuterRef('id')))
+                ))
+        return get_select_prefetch_related(
+            Recipe.objects.annotate(
+                is_in_shopping_cart=Value(False),
+                is_favorited=Value(False),
+            ))
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
@@ -143,7 +154,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
         file = 'shopping_list.txt'
-        response = get_shopping_cart(ingredients)
+        response = FileResponse(
+            get_shopping_cart(ingredients),
+            content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
         return response
 
