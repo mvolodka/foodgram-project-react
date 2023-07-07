@@ -35,20 +35,14 @@ class UserViewSet(DjoserUserViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-
+        qs = User.objects.prefetch_related('follower', 'following')
         if self.request.user.is_authenticated:
-            return (
-                User
-                .objects
-                .annotate(
-                    is_subscribed=Exists(
-                        self.request.user.follower
-                        .filter(author=OuterRef('id'))))
-                .prefetch_related('follower', 'following'))
-        return (
-            User
-            .objects
-            .annotate(is_subscribed=Value(False)))
+            qs = qs.annotate(is_subscribed=Exists(
+                self.request.user.follower
+                .filter(author=OuterRef('id'))))
+            return qs
+        return User.objects.annotate(
+            is_subscribed=Value(False))
 
     @action(
         detail=True,
