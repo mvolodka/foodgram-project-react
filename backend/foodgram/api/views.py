@@ -41,8 +41,7 @@ class UserViewSet(DjoserUserViewSet):
                 self.request.user.follower
                 .filter(author=OuterRef('id'))))
             return qs
-        return User.objects.annotate(
-            is_subscribed=Value(False))
+        return qs.annotate(is_subscribed=Value(False))
 
     @action(
         detail=True,
