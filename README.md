@@ -47,7 +47,7 @@ sudo docker-compose exec backend python manage.py collectstatic --no-input
 ```
 6. Скопируйте предустановленные данные json:
 ```
-docker-compose exec backend python manage.py fill_ingredients_from_csv --path data/
+docker-compose exec backend python manage.py load_ingredients --path data/
 ```
 7. Данные для проверки работы приложения:
 Суперпользователь:
