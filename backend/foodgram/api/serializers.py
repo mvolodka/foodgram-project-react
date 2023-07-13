@@ -145,8 +145,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserSerializer(read_only=True)
     ingredients = IngredientsEditSerializer(many=True)
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.BooleanField(False, read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(False, read_only=True)
     image = Base64ImageField(max_length=None)
 
     class Meta:
