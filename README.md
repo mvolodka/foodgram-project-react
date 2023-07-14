@@ -52,12 +52,8 @@ docker-compose exec backend python manage.py load_ingredients --path data/
 7. Данные для проверки работы приложения:
 Суперпользователь:
 ```
+login: mvolodka
 email: witcher@mail.ru
 password: Qw_138!@8uTh6@
 ```
 
-Пользователь:
-```
-email: vpupkin@mail.ru
-password: sufmad-kixjoj-4zafFy
-```
