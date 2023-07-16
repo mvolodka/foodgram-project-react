@@ -196,7 +196,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
         if len(tags_list) == 0:
             raise serializers.ValidationError(
-                'Список тегов не должен быть пустым!')
+                'Список тегов не может быть пустым!')
 
         all_tags = Tag.objects.all().values_list('id', flat=True)
         if not set(tags_list).issubset(all_tags):
@@ -212,13 +212,13 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return cooking_time
 
     @staticmethod
-    def validate_ingredients(ingredients):
+    def validate(ingredients):
         ingredients_list = []
         for ingredient in ingredients:
             ingredient = ingredient['ingredient'].get('id')
             if ingredient in ingredients:
                 raise serializers.ValidationError(
-                    'Ингредиент повторяется!')
+                    'Ингредиент должен быть уникальным!')
             ingredients.append(ingredient)
         all_ingredients = Ingredient.objects.all().values_list(
             'id', flat=True)
